@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic Tac Toe - Rainbow Mode</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      text-align: center;
+      margin: 0;
+      overflow: hidden;
+      color: white;
+      background: linear-gradient(270deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1, #84fab0, #8fd3f4);
+      background-size: 1200% 1200%;
+      animation: gradientFlow 30s ease infinite;
+    }
+
+    @keyframes gradientFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    h1 {
+      margin-top: 40px;
+      font-size: 3em;
+      text-shadow: 2px 2px #000;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 10px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      font-size: 2.5em;
+      background-color: #ffffff80;
+      border: 3px solid #ffcc00;
+      cursor: pointer;
+      border-radius: 12px;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      box-shadow: 0 0 15px rgba(255,255,255,0.4);
+    }
+
+    .cell:hover {
+      transform: scale(1.1);
+      background-color: #ffffffaa;
+    }
+
+    .cell:disabled {
+      cursor: not-allowed;
+    }
+
+    .red {
+      color: #ff4d4d;
+      text-shadow: 1px 1px black;
+    }
+
+    .blue {
+      color: #33d5ff;
+      text-shadow: 1px 1px black;
+    }
+
+    .green {
+      color: #66ff66;
+      text-shadow: 1px 1px black;
+    }
+
+    .status {
+      margin-top: 20px;
+      font-size: 1.7em;
+      background: linear-gradient(to right, #ff6ec4, #7873f5, #4facfe);
+      -webkit-background-clip: text;
+      color: transparent;
+      font-weight: bold;
+    }
+
+    .play-again {
+      margin-top: 15px;
+      background: linear-gradient(45deg, #43e97b, #38f9d7);
+      color: black;
+      border: none;
+      padding: 12px 25px;
+      font-size: 1.1em;
+      cursor: pointer;
+      border-radius: 12px;
+      box-shadow: 0px 0px 15px rgba(0,0,0,0.3);
+      transition: transform 0.2s ease, box-shadow 0.3s;
+    }
+
+    .play-again:hover {
+      transform: scale(1.05);
+      box-shadow: 0px 0px 20px rgba(255, 255, 255, 0.5);
+    }
+
+    .home-link {
+      color: white;
+      text-decoration: none;
+      font-size: 1.2em;
+      margin-top: 40px;
+      display: inline-block;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: pink;
+      animation: float 6s linear infinite;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(-10px) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) scale(0.3);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🌈 Tic Tac Toe 🌟</h1>
+  <div class="board" id="board"></div>
+  <div class="status" id="status"></div>
+  <button class="play-again" id="playAgainBtn" style="display:none;">Play Again</button>
+
+  <script>
+    const board = document.getElementById('board');
+    const statusText = document.getElementById('status');
+    const playAgainBtn = document.getElementById('playAgainBtn');
+
+    let cells = Array(9).fill(null);
+    let gameOver = false;
+    let playerSymbol = 'X';
+    let computerSymbol = 'O';
+
+    const winningCombos = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    function chooseSymbol() {
+      let choice;
+      do {
+        choice = prompt("Do you want to be X or O?").toUpperCase();
+      } while (!['X', 'O'].includes(choice));
+      playerSymbol = choice;
+      computerSymbol = (choice === 'X') ? 'O' : 'X';
+    }
+
+    function createBoard() {
+      board.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const btn = document.createElement('button');
+        btn.classList.add('cell');
+        btn.dataset.index = i;
+        btn.onclick = () => playerMove(i);
+        board.appendChild(btn);
+      }
+      updateBoard();
+    }
+
+    function playerMove(index) {
+      if (gameOver || cells[index]) return;
+      cells[index] = playerSymbol;
+      updateBoard();
+      if (checkWinner(playerSymbol)) return;
+      setTimeout(computerMove, 400);
+    }
+
+    function computerMove() {
+      const emptyIndices = cells.map((v, i) => v === null ? i : null).filter(i => i !== null);
+      if (emptyIndices.length === 0) return;
+      const move = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+      cells[move] = computerSymbol;
+      updateBoard();
+      checkWinner(computerSymbol);
+    }
+
+    function updateBoard() {
+      document.querySelectorAll('.cell').forEach((btn, i) => {
+        const value = cells[i];
+        btn.textContent = value || '';
+        btn.classList.remove('red', 'blue', 'green');
+        if (value === playerSymbol) {
+          btn.classList.add(playerSymbol === 'X' ? 'red' : 'green');
+        }
+        if (value === computerSymbol) {
+          btn.classList.add(computerSymbol === 'X' ? 'red' : 'blue');
+        }
+        btn.disabled = value !== null || gameOver;
+      });
+    }
+
+    function checkWinner(player) {
+      const won = winningCombos.some(combo =>
+        combo.every(index => cells[index] === player)
+      );
+      if (won) {
+        gameOver = true;
+        statusText.innerHTML = `<span>${player} wins! 🎉</span>`;
+        playAgainBtn.style.display = 'inline-block';
+        launchConfetti();
+        return true;
+      }
+      if (!cells.includes(null)) {
+        statusText.innerHTML = `<span>It's a draw! 😐</span>`;
+        gameOver = true;
+        playAgainBtn.style.display = 'inline-block';
+        return false;
+      }
+      return false;
+    }
+
+    playAgainBtn.onclick = () => {
+      cells = Array(9).fill(null);
+      gameOver = false;
+      statusText.textContent = '';
+      playAgainBtn.style.display = 'none';
+      chooseSymbol();
+      createBoard();
+    };
+
+    function launchConfetti() {
+      for (let i = 0; i < 40; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = `${Math.random() * 100}vw`;
+        confetti.style.top = `${-10}px`;
+        confetti.style.background = `hsl(${Math.random() * 360}, 100%, 75%)`;
+        confetti.style.animationDuration = `${Math.random() * 3 + 3}s`;
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 6000);
+      }
+    }
+
+    // Start game
+    chooseSymbol();
+    createBoard();
+  </script>
+
+  <br><br><br>
+  <a href="Scratch.html" class="home-link">Home Page</a>
+</body>
+</html>
+
